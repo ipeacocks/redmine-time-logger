@@ -1,6 +1,6 @@
 '''
 This script can log 0.7-1.2h of time for all tickets which
-I was involved in and work only with Redmine and uses Redmine REST API.
+you were involved in. Work only with Redmine and uses Redmine REST API.
 '''
 
 from redmine import Redmine
