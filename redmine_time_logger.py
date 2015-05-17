@@ -1,85 +1,114 @@
 '''
-This script can log 0.7-1.2h of time for all tickets which
-you were involved in. Work only with Redmine and uses Redmine REST API.
+This script can count how many time need 
+to be logged to each tickets for getting full month. 
+Program uses Redmine REST API.
 '''
 
 from redmine import Redmine
 from warnings import filterwarnings
 from datetime import datetime, timedelta
-# from dateutil.relativedelta import relativedelta
-import random
+import ConfigParser
 
 
-REDMINE_URL = 'https://redmine.example.com'
-REDMINE_KEY = '9c68f1d5881_your_key_from_Redmine_f76d4bb97e246'
-DATE = raw_input("From which date do you want to log time \
-(format: year-month-day)? ")
-
-
-# REDMINE = Redmine('https://redmine.example.com/', username='vpupkin',
-# password='12345', requests={'verify': False})
-REDMINE = Redmine(REDMINE_URL, key=REDMINE_KEY, requests={'verify': False})
-
-# ignore warning of requests lib in case of bad cert on redmine
-filterwarnings("ignore")
-
-# http://stackoverflow.com/a/14459459/2971192
-# We will search all tickets 1(2) months early
-# because I could log time in old tickets.
-DATE = datetime.strptime(DATE, "%Y-%m-%d").date()
-# DATE_FOR_TICKET = DATE - relativedelta(months=1)
-DATE_FOR_TICKET = DATE-timedelta(days=30)
-
-
-# for usable output
-def print_line():
-    print '-' * 130
+# https://wiki.python.org/moin/ConfigParserExamples
+def ConfigSectionMap(section):
+    dict1 = {}
+    options = Config.options(section)
+    for option in options:
+        try:
+            dict1[option] = Config.get(section, option)
+            if dict1[option] == -1:
+                DebugPrint("skip: %s" % option)
+        except:
+            print("exception on %s!" % option)
+            dict1[option] = None
+    return dict1
 
 
 # show all tickets from some date and return issue list (ids of problems)
 def show_all_tickets():
     issue_list = []
-    issues = (REDMINE.issue.filter(status_id='*',
-              created_on='>='+str(DATE_FOR_TICKET)))
+    issues = REDMINE.issue.filter(status_id='*', created_on='>='+str(DATE_FOR_TICKET))
     for issue in issues:
-        # Epic ticket is bundle of tickets for usable monitoring
-        if str(issue.tracker) != 'Epic' and 'EPIC' not in str(issue):
+        # we will not gather tickets with subtasks
+        if not [subtask.id for subtask in issue.children]:
             issue_list.append(issue.id)
-
-    # print issue_list
     return issue_list
 
 
-# log time if I logged time early
-def log_time(issue_list):
-    counter = 0
-    sum_time = 0
+def my_issues_and_time(issue_list):
+    # total_time - total logged time for period
+    total_time = 0
+    last_issue_id = 0
+    # list of issue numbers + data of time loggining
+    # [(11308, datetime.date(2015, 4, 30)), (11994, datetime.date(2015, 4, 30))]
+    my_issues = []
+
+    #print issue_list
+
     for issue_id in issue_list:
-        time_entries = (REDMINE.time_entry.filter(issue_id=issue_id,
-                        spent_on='>='+str(DATE)))
+        time_entries = (REDMINE.time_entry.filter(issue_id=issue_id, spent_on='>='+str(DATE)))
+        #print dir(time_entries)
+
         try:
             for time_entry in time_entries:
-                # We are loggining time only for tickets where we was involved.
-                if str(time_entry.user) == "User Name":
-                    counter = counter + 1
-                    hours = '%3.1f' % random.uniform(0.7, 1.2)
-                    issue = REDMINE.issue.get(issue_id)
-                    print ("%s [%s/issues/%s]" % (issue, REDMINE_URL,
-                           str(issue_id)))
-                    # print issue.tracker,"|"
-                    # Time entries creating.
-                    (REDMINE.time_entry.create(issue_id=issue_id,
-                     spent_on=time_entry.spent_on, hours=hours,
-                     activity_id=18, comments=''))
-                    print "Logged %s hours" % hours
-                    print "---"
-                    sum_time = sum_time + float(hours)
-                    break
+                #print time_entry.hours
+                if str(time_entry.user) == USERNAME:
+                    #print issue_id, time_entry.hours
+                    if issue_id != last_issue_id:
+                        a = (issue_id, time_entry.spent_on)
+                        my_issues.append(a)
+                        last_issue_id = issue_id
+                    total_time = total_time + time_entry.hours
+                    # for debugging purposes
+                    #print total_time, my_issues
+                    #print len(my_issues), "- amount of tickets"
         except:
             pass
-    print "------------------------------------------"
-    print "You were worked on %s tasks" % counter
-    print "Total logged hours: %s" % sum_time
+
+    time_to_log = work_time - total_time
+    time_to_task = time_to_log/len(my_issues)
+    # print time_to_task, my_issues, "time to each task + issue list with log time"
+    return time_to_task, my_issues
+
+
+def log_time(time_to_task, my_issues):
+    for task_id, log_date in my_issues:
+        issue = REDMINE.issue.get(task_id)
+        # for debugging purposes
+        print ("%s %s/issues/%s" % (issue, REDMINE_URL, task_id))
+        print "Date for time log ", log_date
+        print "Will be logged ", time_to_task
+        print "-" * 80
+        (REDMINE.time_entry.create(issue_id=task_id, spent_on=log_date, 
+         hours=time_to_task, activity_id=17, comments=''))
+
+
+Config = ConfigParser.ConfigParser()
+Config.read("settings.ini")
+
+REDMINE_URL = ConfigSectionMap("Address")['redmine_url']
+REDMINE_KEY = ConfigSectionMap("Personal")['redmine_key']
+USERNAME = ConfigSectionMap("Personal")['username']
+
+# print REDMINE_URL, REDMINE_KEY, USERNAME
+# DATE = '>=2014-10-01'
+DATE = raw_input("From which date do you want to log time (format: year-month-day)? ")
+work_time = float(raw_input("How many work hours in this month? "))
+
+REDMINE = Redmine(REDMINE_URL, key=REDMINE_KEY, requests={'verify': False})
+
+# ignore warning of request lib in case of bad cert on redmine
+filterwarnings("ignore")
+
+# http://stackoverflow.com/a/14459459/2971192
+# We will search all tickets 10-20 days early
+# because I could log time in old tickets.
+DATE = datetime.strptime(DATE, "%Y-%m-%d").date()
+# DATE_FOR_TICKET = DATE - relativedelta(months=1)
+# was 30
+DATE_FOR_TICKET = DATE-timedelta(days=10)
 
 issue_list = show_all_tickets()
-log_time(issue_list)
+time_to_task, my_issues = my_issues_and_time(issue_list)
+log_time(time_to_task, my_issues)
