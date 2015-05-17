@@ -16,6 +16,8 @@ New instance html-menu https://type.your-address.com/issues/11457
 Date for time log  2015-01-15
 Will be logged  11.2046153846
 --------------------------------------------------------------------------------
+...
+--------------------------------------------------------------------------------
 [Admin] Git access https://type.your-address.com/issues/11456
 Date for time log  2015-01-15
 Will be logged  11.2046153846
