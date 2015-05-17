@@ -7,7 +7,7 @@ so **time_to_ticket** will be logged to each ticket for getting norm.
 
 Script produces such output:
 
-```bash
+```
 » python redmine_time_logger.py
 From which date do you want to log time (format: year-month-day)? 2015-01-01
 How many work hours in this month? 160
