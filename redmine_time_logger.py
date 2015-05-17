@@ -2,6 +2,7 @@
 This script can count how many time need 
 to be logged to each tickets for getting full month. 
 Program uses Redmine REST API.
+Author https://github.com/ipeacocks/redmine_time_logger
 '''
 
 from redmine import Redmine

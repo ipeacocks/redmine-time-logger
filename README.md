@@ -1,9 +1,9 @@
 This script can search all your tickets which you was involved in during month and log time there for getting month norm.
 It can be usefull in the end of month because manual time loggining is pretty annoying. 
 
-time_to_ticket = (month_norm - logged_time) / amount_of_tickets
+*time_to_ticket = (month_norm - logged_time) / amount_of_tickets*
 
-so *time_to_ticket* will be logged to each ticket for getting norm.
+so **time_to_ticket** will be logged to each ticket for getting norm.
 
 Script produces such output:
 
@@ -27,4 +27,5 @@ Will be logged  11.2046153846
 ```
 
 I use this library http://python-redmine.readthedocs.org/
+
 Ask me if you have any questions
