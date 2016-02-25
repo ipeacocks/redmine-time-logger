@@ -41,35 +41,24 @@ def my_issues_and_time(issue_list):
     # total_time - total logged time for period
     total_time = 0
     last_issue_id = 0
-    # list of issue numbers + data of time loggining
-    # [(11308, datetime.date(2015, 4, 30)), (11994, datetime.date(2015, 4, 30))]
     my_issues = []
-
-    #print issue_list
 
     for issue_id in issue_list:
         time_entries = (REDMINE.time_entry.filter(issue_id=issue_id, spent_on='>='+str(DATE)))
-        #print dir(time_entries)
 
         try:
             for time_entry in time_entries:
-                #print time_entry.hours
                 if str(time_entry.user) == USERNAME:
-                    #print issue_id, time_entry.hours
                     if issue_id != last_issue_id:
                         a = (issue_id, time_entry.spent_on)
                         my_issues.append(a)
                         last_issue_id = issue_id
                     total_time = total_time + time_entry.hours
-                    # for debugging purposes
-                    #print total_time, my_issues
-                    #print len(my_issues), "- amount of tickets"
         except:
             pass
 
     time_to_log = work_time - total_time
     time_to_task = time_to_log/len(my_issues)
-    # print time_to_task, my_issues, "time to each task + issue list with log time"
     return time_to_task, my_issues
 
 
