@@ -30,6 +30,6 @@ Will be logged  11.2046153846
 --------------------------------------------------------------------------------
 ```
 
-I use this library http://python-redmine.readthedocs.org/
+I use this library https://github.com/maxtepkeev/python-redmine
 
 Ask me if you have any questions
